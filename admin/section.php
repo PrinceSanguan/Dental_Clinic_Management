@@ -238,32 +238,86 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
                     </tr>
                   </thead>
                  <tbody>		
-	           <?php
-$q_e = $conn->query("SELECT * FROM `appointment_desc` WHERE `appointment_status`='Pending' ");
-while ($f_e = $q_e->fetch_array()) {
-					        $u_id_user = $f_e['appointment_id'];
-							$q2 = $conn->query("SELECT * FROM `user_account1` WHERE `u_id` = '$u_id_user'");
-							$f2 = $q2->fetch_array();
-							
-					        $appointment_service = $f_e['appointment_desc'];
-					        
-							$q3 = $conn->query("SELECT * FROM `services` WHERE `services_id` = '$appointment_service'");
-							$f3 = $q3->fetch_array();
-	   ?>
-					<tr>
-						<td style="text-size:8px;text-transform:capitalize;"><?php echo $f2['fname']." ".$f2['mname']." ".$f2['lname'];?></td>	
-						<td style="text-size:8px;text-transform:capitalize;"><?php echo $f3['services_name'];?></td>		
-						<td style="text-size:8px;text-transform:capitalize;"><?php echo $f3['services_cost'];?></td>
-        <td><?php echo $f_e['appointment_date'] ?></td>
-        <td><?php echo $f_e['appointment_status'] ?></td>
-        <td id="printPageButton">
-            <a href="#" class="btn-danger btn-m btn" data-toggle="modal" data-target="#historyModal<?php echo $u_id_user; ?>">View</a>
-            <a href="section.php?id_data_update=<?php echo $f_e['appointment_desc_id']; ?>&update=Approved" class="btn-info btn-m btn">Approve</a>
-            <a href="section.php?id_data_update=<?php echo $f_e['appointment_desc_id']; ?>&update=Cancelled" class="btn-warning btn-m btn">Cancel</a>
-            <a href="#" class="btn-danger btn-m btn" data-toggle="modal" data-target="#rescheduleModal-<?php echo $f_e['appointment_desc_id']; ?>">Re Schedule</a>
-            
-        </td>
-    </tr>
+                 <?php
+                    use PHPMailer\PHPMailer\PHPMailer;
+                    use PHPMailer\PHPMailer\Exception;
+
+                    // Include PHPMailer library files
+                    require '../PHPMailer/src/Exception.php';
+                    require '../PHPMailer/src/PHPMailer.php';
+                    require '../PHPMailer/src/SMTP.php';
+
+                    $q_e = $conn->query("SELECT * FROM `appointment_desc` WHERE `appointment_status`='Pending' ");
+                    while ($f_e = $q_e->fetch_array()) {
+                        $u_id_user = $f_e['appointment_id'];
+                        $q2 = $conn->query("SELECT * FROM `user_account1` WHERE `u_id` = '$u_id_user'");
+                        $f2 = $q2->fetch_array();
+                        
+                        $appointment_service = $f_e['appointment_desc'];
+                        
+                        $q3 = $conn->query("SELECT * FROM `services` WHERE `services_id` = '$appointment_service'");
+                        $f3 = $q3->fetch_array();
+                        
+                        // Fetch appointment date and convert it to a DateTime object
+                        $appointment_date = new DateTime($f_e['appointment_date']);
+                        $today = new DateTime();
+                        $interval = $today->diff($appointment_date);
+
+                        // Check if the appointment is 1 day away
+                        if ($interval->days == 1 && $interval->invert == 0) { // invert == 0 means it's a future date
+                            // Send email reminder
+                            $email = $f2['email']; // Assuming the user's email is in the 'email' field of the 'user_account1' table
+                            $name = $f2['fname'] . " " . $f2['lname']; // Full name for personalization
+
+                            sendReminderEmail($email, $name);
+                        }
+                        ?>
+                        <tr>
+                            <td style="text-size:8px;text-transform:capitalize;"><?php echo $f2['fname']." ".$f2['mname']." ".$f2['lname'];?></td>    
+                            <td style="text-size:8px;text-transform:capitalize;"><?php echo $f3['services_name'];?></td>        
+                            <td style="text-size:8px;text-transform:capitalize;"><?php echo $f3['services_cost'];?></td>
+                            <td><?php echo $f_e['appointment_date'] ?></td>
+                            <td><?php echo $f_e['appointment_status'] ?></td>
+                            <td id="printPageButton">
+                                <a href="#" class="btn-danger btn-m btn" data-toggle="modal" data-target="#historyModal<?php echo $u_id_user; ?>">View</a>
+                                <a href="section.php?id_data_update=<?php echo $f_e['appointment_desc_id']; ?>&update=Approved" class="btn-info btn-m btn">Approve</a>
+                                <a href="section.php?id_data_update=<?php echo $f_e['appointment_desc_id']; ?>&update=Cancelled" class="btn-warning btn-m btn">Cancel</a>
+                                <a href="#" class="btn-danger btn-m btn" data-toggle="modal" data-target="#rescheduleModal-<?php echo $f_e['appointment_desc_id']; ?>">Re Schedule</a>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+
+                    // Function to send reminder email using PHPMailer
+                    function sendReminderEmail($email, $name) {
+                        $mail = new PHPMailer(true);
+
+                        try {
+                            // Server settings
+                            $mail->isSMTP();
+                            $mail->Host       = 'smtp.gmail.com';
+                            $mail->SMTPAuth   = true;
+                            $mail->Username   = 'orthobooking123@gmail.com'; // Your Gmail email
+                            $mail->Password   = 'nngo sewb ozfk umbv'; // Your Gmail app password
+                            $mail->SMTPSecure = 'tls';
+                            $mail->Port       = 587;
+
+                            // Recipients
+                            $mail->setFrom('orthobooking123@gmail.com', 'Ortho Booking');
+                            $mail->addAddress($email, $name); // Add a recipient
+
+                            // Content
+                            $mail->isHTML(true);
+                            $mail->Subject = 'Appointment Reminder';
+                            $mail->Body    = 'Dear ' . $name . ',<br><br>This is a friendly reminder that you have an appointment tomorrow.<br><br>Best regards,<br>Ortho Booking Team';
+                            
+                            $mail->send();
+                            echo 'Reminder email has been sent to ' . $name . ' (' . $email . ')';
+                        } catch (Exception $e) {
+                            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                        }
+                    }
+                    ?>
     <!-- Modal outside the loop -->
     <div id="rescheduleModal-<?php echo $f_e['appointment_desc_id']; ?>" class="modal fade" role="dialog">
        
@@ -359,7 +413,7 @@ if (isset($_POST['submit_'.$id_data.''])) {
               </script>';
     }
 } 
-					}
+					
 					
 					if(isset($_GET['id_data_update'])){
 					      $id_data_update = $_GET['id_data_update'];
