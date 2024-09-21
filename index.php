@@ -137,27 +137,24 @@ date_default_timezone_set('Asia/Manila');
           <h5 class="modal-title" id="exampleModalLabel">Sign In</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form  method="post" enctype = "multipart/form-data" action = "<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="margin-top:50px;">
-        <div class="modal-body">
-            
+                <form method="post" enctype="multipart/form-data" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="margin-top:50px;">
                 <div class="modal-body">
-                              <div class = "form-group"  <?php echo (!empty($username_err)) ? 'has-error' : ''; ?> style="margin-top:-50px;">
-                                  <input type="text" class="form-control form-control-user" value="<?php echo $_POST['email']?>" name = "email"  id="exampleInputUser" aria-describedby="emailHelp" placeholder="Enter Email..." autofocus>
-                                <span class="help-block"  style="color:#DC143C;"><?php echo $username_err; ?></span>
-                              </div><br>
-                              <div class = "form-group"  <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>>
-                                  <input type="password" class="form-control form-control-user" name = "password"id="exampleInputPassword" placeholder="Enter Password">
-                                <span class="help-block"  style="color:#DC143C;"><?php echo $password_err; ?></span>
-                                  <br>		
-                              </div>
-                              <a href="registration.php" style="color:#45505b;text-decoration:none;">No Account Yet ?</a>
-                              <a href="forgot.php" style="color:#45505b;text-decoration:none;float:right;">Forgot Password</a>
+                    <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
+                        <input type="text" class="form-control form-control-user" value="<?php echo htmlspecialchars($email); ?>" name="email" id="exampleInputUser" placeholder="Enter Email..." autofocus>
+                        <span class="help-block" style="color:#DC143C;"><?php echo $username_err; ?></span>
+                    </div><br>
+                    <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
+                        <input type="password" class="form-control form-control-user" name="password" id="exampleInputPassword" placeholder="Enter Password">
+                        <span class="help-block" style="color:#DC143C;"><?php echo $password_err; ?></span>
+                        <br>
+                    </div>
+                    <a href="registration.php" style="color:#45505b;text-decoration:none;">No Account Yet?</a>
+                    <a href="forgot.php" style="color:#45505b;text-decoration:none;float:right;">Forgot Password</a>
                 </div>
-        </div>
-        <div class="modal-footer">
-          <button name="signin" type="submit" class="btn btn-primary" >Sign In</button>
-        </div>
-        </form>
+                <div class="modal-footer">
+                    <button name="signin" type="submit" class="btn btn-primary">Sign In</button>
+                </div>
+            </form>
       </div>
     </div>
     </div>

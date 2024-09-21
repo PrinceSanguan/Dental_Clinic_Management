@@ -108,7 +108,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
                 </button>
                 <div class="collapse navbar-collapse" id="navbarCollapse">
                     <div class="navbar-nav">
-                        <a href="home.php" class="nav-item nav-link active">Home</a>
+                        <a href="home.php" class="nav-item nav-link">Home</a>
                         
                         <div class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Services</a>
@@ -129,7 +129,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
         					$f1 = $q1->fetch_array();
                             echo "<b style='color:red;'>".$f1['count_msg']."</b>"; 
                         ?></a>
-                        <a href="user.php" class="nav-item nav-link" style="text-transform:capitalize;">
+                        <a href="user.php" class="nav-item nav-link active" style="text-transform:capitalize;">
                             <?php  
                                     echo $name;
                             ?>
@@ -437,67 +437,57 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
       </div>
     </div>
     </div>
-    <!-- Service Start -->
-    <div class="container-fluid container-service py-5">
-        <div class="container pt-5">
-            <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
-                <h1 class="display-6 mb-3"> Your Appointment History</h1>
-            </div>
-            <div class="row g-4">
-                <?php
-                    $q_e1 = $conn->query("SELECT * FROM `appointment_desc` WHERE `appointment_id`='$u_id' AND `appointment_status`='Success'ORDER BY appointment_desc_id DESC");
-                	while($f_e1=$q_e1->fetch_array()){
-                	            $appointment_desc = $f_e1['appointment_desc'];
-                	            $appointment_desc_id = $f_e1['appointment_desc_id'];
-                	            $appointment_id = $f_e1['appointment_id'];
-                                $q1 = $conn->query("SELECT * FROM `services` WHERE `services_id` = '$appointment_desc'");
-                                $f1 = $q1->fetch_array();
-                                
-                                
-                                $q2 = $conn->query("SELECT COUNT(*) AS count_id FROM `dental_history` WHERE `appointment_desc` = '$appointment_desc_id'");
-                                $f2 = $q2->fetch_array();
-                                
-                ?>
-               
-                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
-                    <div class="service-item">
-                        <div class="icon-box-primary mb-4">
-                            <i class="bi bi-bandaid text-dark" ></i>
-                        </div>
-                        <h5 class="mb-3" style="text-transform:capitalize;"><?php echo $f1['services_name']?> - <?php echo $f_e1['appointment_status']?> </h5>
-                            <p class="mb-4"><?php echo $f_e1['appointment_date']?> - 
-                           <?php 
-                            if( $f2['count_id']>=1){
-                                
-                                $q3 = $conn->query("SELECT * FROM `dental_history` WHERE `appointment_desc` = '$appointment_desc_id'");
-                                $f3 = $q3->fetch_array();
-                           ?> 
-                         <a href="#" style="float:right;color:red;" data-bs-toggle="modal" data-bs-target="#checkModal<?php echo $f_e1['appointment_id'];?>">Check</a></p>
-                        <?php }else{ echo "No Data";}?>
-                    </div>
-                </div>
-    <div class="modal fade" id="checkModal<?php echo $f_e1['appointment_id'];?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Check Data</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+<!-- Service Start -->
+<div class="container-fluid container-service py-5">
+    <div class="container pt-5">
+        <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+            <h1 class="display-6 mb-3">Your Dental History</h1>
         </div>
-        <div class="modal-body">
-            <center><img src="admin/Chart/<?php echo $f3['dental_file'];?>.jpg.jpg" style="width:450px;"></center>
-        </div>
-        <div class="modal-footer">
-            <button  class="btn btn-secondary"  data-bs-dismiss="modal" aria-label="Close">Close</button>
-        </div>
-      </div>
-    </div>
-    </div>
-                <?php } ?>
-                
-            </div>
+
+        <div class="row g-4">
+
+            <?php
+            // Initialize session and fetch data from the dental_history table for the logged-in user
+            session_start();
+            $user_id = $_SESSION['u_id']; // Fetching the u_id from session
+
+            // Assuming you have a valid database connection in $conn
+            $sql = "SELECT * FROM dental_history WHERE dental_user = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $user_id); // Binding as integer
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                // Output data of each row
+                while ($row = $result->fetch_assoc()) {
+                    // Display the dental file image if exists
+                    $imagePath = "admin/Chart/" . htmlspecialchars($row['dental_file']) . ".jpg.jpg"; // Construct the image path
+                    
+                    echo '<div class="col-md-6">';
+                   
+                        // Check if image exists before displaying
+                        if (file_exists($imagePath)) {
+                            echo '<div class="modal-body"><center><img src="' . $imagePath . '" alt="Dental File" style="width:450px;"></center></div>';
+                        } else {
+                            echo '<div class="modal-body"><center><p>No image available</p></center></div>';
+                        }
+                    
+                    echo '</div>'; // End of card-body
+
+                }
+            } else {
+                echo '<p>No dental history found.</p>';
+            }
+
+            $stmt->close();
+            $conn->close();
+            ?>
         </div>
     </div>
-    <!-- Service End -->
+</div>
+<!-- Service End -->
 
 
 
@@ -618,40 +608,3 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
 
 </html>
 
-<!-- Service Start -->
-<div class="container-fluid container-service py-5">
-    <div class="container pt-5">
-        <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
-            <h1 class="display-6 mb-3">Your Appointment History</h1>
-        </div>
-
-        <div class="row g-4">
-
-            <?php
-            // Fetch data from the dental_history table
-                $sql = "SELECT * FROM dental_history";
-                $result = $conn->query($sql);
-            if ($result->num_rows > 0) {
-                // Output data of each row
-                while($row = $result->fetch_assoc()) {
-                    echo '<div class="col-md-4">';
-                    echo '<div class="card">';
-                    echo '<div class="card-body">';
-                    echo '<h5 class="card-title">' . htmlspecialchars($row['dental_user']) . '</h5>';
-                    echo '<p class="card-text">File: ' . htmlspecialchars($row['dental_file']) . '</p>';
-                    echo '<p class="card-text">Braces: ' . htmlspecialchars($row['dental_brace']) . '</p>';
-                    echo '<p class="card-text">Comment: ' . htmlspecialchars($row['dental_comment']) . '</p>';
-                    echo '<p class="card-text">Status: ' . htmlspecialchars($row['dental_status']) . '</p>';
-                    echo '<p class="card-text">Date: ' . htmlspecialchars($row['dental_date']) . '</p>';
-                    echo '<p class="card-text">Description: ' . htmlspecialchars($row['appointment_desc']) . '</p>';
-                    echo '</div></div></div>';
-                }
-            } else {
-                echo '<p>No appointments found.</p>';
-            }
-            $conn->close();
-            ?>
-        </div>
-    </div>
-</div>
-<!-- Service End -->

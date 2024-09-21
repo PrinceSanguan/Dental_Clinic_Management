@@ -609,9 +609,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
                                                 </div>
                                             </div>
                                         </div>
-
                                     </div>
-
                                 </div>
         </div>
         <div class="modal-footer">
