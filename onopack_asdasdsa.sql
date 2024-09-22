@@ -299,7 +299,7 @@ INSERT INTO `messages` (`id`, `sender`, `recipient_id`, `text`, `timestamp`) VAL
 
 --
 -- Table structure for table `process_desc`
---
+-
 
 CREATE TABLE `process_desc` (
   `process_desc_id` int(11) NOT NULL,
