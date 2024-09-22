@@ -915,40 +915,31 @@ $sql_sched1 = "INSERT INTO medical_history VALUES (null,'$date','$prev_dentist',
                     </div>
                     <h5 class="mb-3"><?php echo $f_e1['med_prev_dent']; ?> - <?php echo $f_e1['med_last_vi']; ?></h5>
                     <p class="mb-4"><?php echo $f_e1['med_date']; ?></p>
-                    <!-- Edit Button -->
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal<?php echo $f_e1['id']; ?>">Edit</button>
+                    <!-- dELETE Button -->
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $f_e1['med_id']; ?>">Delete</button>
                 </div>
             </div>
 
             <!-- Edit Modal -->
-            <div class="modal fade" id="editModal<?php echo $f_e1['id']; ?>" tabindex="-1" aria-labelledby="editModalLabel<?php echo $f_e1['id']; ?>" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editModalLabel<?php echo $f_e1['id']; ?>">Edit Medical History</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Form starts here -->
-                            <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                                <input type="hidden" name="id" value="<?php echo $f_e1['id']; ?>" />
-                                <div class="mb-3">
-                                    <label for="med_prev_dent" class="form-label">Previous Dental Issue</label>
-                                    <input type="text" class="form-control" id="med_prev_dent" name="med_prev_dent" value="<?php echo $f_e1['med_prev_dent']; ?>" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="med_last_vi" class="form-label">Last Visit</label>
-                                    <input type="text" class="form-control" id="med_last_vi" name="med_last_vi" value="<?php echo $f_e1['med_last_vi']; ?>" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="med_date" class="form-label">Date</label>
-                                    <input type="date" class="form-control" id="med_date" name="med_date" value="<?php echo $f_e1['med_date']; ?>" required>
-                                </div>
-                                <button type="submit" class="btn btn-success" name="update_medical_history">Submit</button>
-                            </form>
-                        </div>
-                    </div>
+            <div class="modal fade" id="deleteModal<?php echo $f_e1['med_id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this record?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST" class="d-inline">
+                    <input type="hidden" name="med_id" value="<?php echo $f_e1['med_id']; ?>">
+                    <button type="submit" name="delete_medical_history" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+                </div>
+            </div>
             </div>
             <?php } ?>
         </div>
@@ -959,44 +950,33 @@ $sql_sched1 = "INSERT INTO medical_history VALUES (null,'$date','$prev_dentist',
 <?php
 // Assuming database connection is already established elsewhere
 
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_medical_history'])) {
+// Handle form submission for deletion
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_medical_history'])) {
     // Debug: Output the POST data
     echo "<pre>";
     print_r($_POST);
     echo "</pre>";
 
     // Sanitize and collect the POST data
-    $id = isset($_POST['id']) ? htmlspecialchars($_POST['id']) : '';
-    $med_prev_dent = isset($_POST['med_prev_dent']) ? htmlspecialchars($_POST['med_prev_dent']) : '';
-    $med_last_vi = isset($_POST['med_last_vi']) ? htmlspecialchars($_POST['med_last_vi']) : '';
-    $med_date = isset($_POST['med_date']) ? htmlspecialchars($_POST['med_date']) : '';
-
-    // Debug: Output sanitized variables
-    echo "<pre>";
-    echo "ID: $id\n";
-    echo "Previous Dental Issue: $med_prev_dent\n";
-    echo "Last Visit: $med_last_vi\n";
-    echo "Date: $med_date\n";
-    echo "</pre>";
+    $id = isset($_POST['med_id']) ? htmlspecialchars($_POST['med_id']) : '';
 
     // Validate the data (basic validation)
-    if (!empty($id) && !empty($med_prev_dent) && !empty($med_last_vi) && !empty($med_date)) {
+    if (!empty($id)) {
         
-        // Prepare the SQL query to update the medical_history table
-        $sql = "UPDATE medical_history SET med_prev_dent=?, med_last_vi=?, med_date=? WHERE id=?";
+        // Prepare the SQL query to delete from the medical_history table
+        $sql = "DELETE FROM medical_history WHERE med_id=?";
 
         // Use a prepared statement to avoid SQL injection
         if ($stmt = $conn->prepare($sql)) {
-            $stmt->bind_param("sssi", $med_prev_dent, $med_last_vi, $med_date, $id);
+            $stmt->bind_param("i", $id);
 
             // Execute the statement
             if ($stmt->execute()) {
                 // Success: provide feedback to the user (or redirect)
-                echo "<script>alert('Record updated successfully.'); window.location.href='your_page.php';</script>";
+                echo "<script>alert('Record deleted successfully.'); window.location.href='medical-history.php';</script>";
             } else {
                 // Failure: provide feedback to the user
-                echo "<script>alert('Error updating record: " . $stmt->error . "');</script>";
+                echo "<script>alert('Error deleting record: " . $stmt->error . "');</script>";
             }
             $stmt->close();
         } else {
@@ -1005,7 +985,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_medical_history
 
     } else {
         // Validation failed: provide feedback
-        echo "<script>alert('All fields are required.');</script>";
+        echo "<script>alert('No record selected for deletion.');</script>";
     }
 }
 ?>
