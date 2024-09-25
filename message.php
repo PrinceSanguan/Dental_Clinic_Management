@@ -215,58 +215,63 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
         </div>
         </form>
 
+        <!--- Copy this for Appointment Schudule Logic -->
+
         <?php 
-        if(isset($_POST['Send'])){
-            $schedule_time = $_POST['schedule_time'];
-            $date = $_POST['date']." - ".$schedule_time;
-            $user_id = $_POST['user_id'];
-            $services = $_POST['services'] ?? []; // Handle multiple selected services
-                $q1 = $conn->query("SELECT COUNT(*) FROM `appointment_desc` WHERE `appointment_date` = '$date' AND `appointment_status`='Approved'");
-                $f1 = $q1->fetch_array(MYSQLI_NUM);
-                $count = $f1[0];
-                
-                $time1 = date('H:i',time());  
-                $time2 = $schedule_time;
-            if($count==0){
-    				$sql_sched1  = "INSERT INTO appointment_desc VALUES(null,'$user_id','$services','$date','','','Pending')";	
-    				if (mysqli_query($conn, $sql_sched1)){
-                                        echo '<script>
-        									function myFunction() {
-        										swal({
-        										title: "Success!",
-        										text: "Your Book Successfully Request",
-        									    icon: "success",
-        										type: "success"
-        										}).then(function() {
-        										window.location = "home.php";
-        									  });}
-        								</script>';
-                    }else{
-                                        echo '<script>
-        									function myFunction() {
-        									swal({
-        									title: "Failed!",
-        									text: "Please Try Again",
-        									icon: "error",
-        									button: "Ok",
-        									});}
-        								</script>';
-                    }
-            }else{
-                                        echo '<script>
-        									function myFunction() {
-        									swal({
-        									title: "Failed!",
-        									text: "Please Choose Another Date Schedule",
-        									icon: "error",
-        									button: "Ok",
-        									});}
-        								</script>';
-            }   
-            
-        
+if(isset($_POST['Send'])){
+    $schedule_time = $_POST['schedule_time'];
+    $date = $_POST['date']." - ".$schedule_time; // Combine date and time
+    $user_id = $_POST['user_id'];
+    $services = implode(',', $_POST['services'] ?? []); // Handle multiple selected services as a comma-separated string
+    
+    // Query to check if the date already exists with approved status
+    $q1 = $conn->query("SELECT COUNT(*) FROM `appointment_desc` WHERE `appointment_date` = '$date'");
+    $f1 = $q1->fetch_array(MYSQLI_NUM);
+    $count = $f1[0]; // Check how many records match this condition
+    
+    $time1 = date('H:i',time());  
+    $time2 = $schedule_time;
+    
+    // If the count is 0, it means the appointment is not yet booked
+    if($count == 0){
+        // Proceed to insert the new appointment
+        $sql_sched1  = "INSERT INTO appointment_desc VALUES(null, '$user_id', '$services', '$date', '', '', 'Pending')";	
+        if (mysqli_query($conn, $sql_sched1)){
+            echo '<script>
+                swal({
+                    title: "Success!",
+                    text: "Your booking request was submitted successfully!",
+                    icon: "success",
+                    type: "success"
+                }).then(function() {
+                    window.location = "home.php";
+                });
+            </script>';
+        } else {
+            echo '<script>
+                swal({
+                    title: "Failed!",
+                    text: "Please try again",
+                    icon: "error",
+                    button: "Ok"
+                });
+            </script>';
+        }
+    } else {
+        // If the date is already booked, show the error message
+        echo '<script>
+            swal({
+                title: "Failed!",
+                text: "Your schedule is already booked. Please choose another date or time.",
+                icon: "error",
+                button: "Ok"
+            });
+        </script>';
     }
+}
 ?>
+
+<!--- Copy this for Appointment Schudule Logic -->
         
 
       </div>

@@ -299,7 +299,7 @@ INSERT INTO `messages` (`id`, `sender`, `recipient_id`, `text`, `timestamp`) VAL
 
 --
 -- Table structure for table `process_desc`
--
+--
 
 CREATE TABLE `process_desc` (
   `process_desc_id` int(11) NOT NULL,
@@ -590,3 +590,4 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+ 

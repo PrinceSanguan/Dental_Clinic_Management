@@ -164,12 +164,14 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
           <h5 class="modal-title" id="exampleModalLabel">Book Now</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form  method="post" enctype = "multipart/form-data" action = "<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="margin-top:50px;">
+
+
+               <form  method="post" enctype = "multipart/form-data" action = "<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" style="margin-top:50px;">
         <div class="modal-body">
                 <div class = "form-group row">
                     <div class="col-sm-6 mb-3 mb-sm-0">
                         <label>Book Date</label>
-                        <input type="date" class="form-control form-control-user" id="datepicker" name = "date"  autofocus min="<?php echo date('Y-m-d')?>" required>
+                        <input type="date" class="form-control form-control-user" id="datepicker" name = "date"  autofocus min="<?php echo date('m-Y-d')?>" required>
                         <input type="hidden" class="form-control form-control-user" name = "user_id"  autofocus value="<?php echo $u_id?>" required>
                     </div>   
                     <div class="col-sm-6 mb-3 mb-sm-0">
@@ -189,78 +191,90 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
 					      </select> 
 					</div>  
                 </div>
-                <div class = "form-group row">
+
+                <div class="form-group row">
                     <div class="col-sm-12 mb-3 mb-sm-0">
-                        <label>Service List </label>
-                        <select class="form-control form-control-user" name = "service" required style="text-transform:capitalize;">
-                                <option value="">Select Services</option>
-                                <?php
-                					$q_e = $conn->query("SELECT * FROM `services` WHERE `services_status`='0'");
-                					while($f_e=$q_e->fetch_array()){
-                                ?>
-                                <option value="<?php echo $f_e['services_id'];?>"><?php echo $f_e['services_name'];?></option>
-                                <?php } ?>
-                        </select>
-                    </div>                         
+                        <label>Service List</label>
+                        <div class="form-check">
+                            <?php
+                                $q_e = $conn->query("SELECT * FROM `services` WHERE `services_status`='0'");
+                                while($f_e = $q_e->fetch_array()) {
+                            ?>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="services[]" value="<?php echo $f_e['services_id']; ?>" id="service-<?php echo $f_e['services_id']; ?>">
+                                <label class="form-check-label" for="service-<?php echo $f_e['services_id']; ?>" style="text-transform:capitalize;">
+                                    <?php echo $f_e['services_name']; ?>
+                                </label>
+                            </div>
+                            <?php } ?>
+                        </div>
+                    </div>
                 </div>
+
         </div>
         <div class="modal-footer">
             <button  class="btn btn-secondary"  data-bs-dismiss="modal" aria-label="Close">Close</button>
             <button  class="btn btn-danger" name="Send">Book An Appointment</button>
         </div>
         </form>
+
+        <!--- Copy this for Appointment Schudule Logic -->
+
         <?php 
-        if(isset($_POST['Send'])){
-            $schedule_time = $_POST['schedule_time'];
-            $date = $_POST['date']." - ".$schedule_time;
-            $user_id = $_POST['user_id'];
-            $service = ucwords($_POST['service']);
-                $q1 = $conn->query("SELECT COUNT(*) FROM `appointment_desc` WHERE `appointment_date` = '$date' AND `appointment_status`='Approved'");
-                $f1 = $q1->fetch_array(MYSQLI_NUM);
-                $count = $f1[0];
-                
-                $time1 = date('H:i',time());  
-                $time2 = $schedule_time;
-            if($count==0){
-    				$sql_sched1  = "INSERT INTO appointment_desc VALUES(null,'$user_id','$service','$date','','','Pending')";	
-    				if (mysqli_query($conn, $sql_sched1)){
-                                        echo '<script>
-        									function myFunction() {
-        										swal({
-        										title: "Success!",
-        										text: "Your Book Successfully Request",
-        									    icon: "success",
-        										type: "success"
-        										}).then(function() {
-        										window.location = "home.php";
-        									  });}
-        								</script>';
-                    }else{
-                                        echo '<script>
-        									function myFunction() {
-        									swal({
-        									title: "Failed!",
-        									text: "Please Try Again",
-        									icon: "error",
-        									button: "Ok",
-        									});}
-        								</script>';
-                    }
-            }else{
-                                        echo '<script>
-        									function myFunction() {
-        									swal({
-        									title: "Failed!",
-        									text: "Please Choose Another Date Schedule",
-        									icon: "error",
-        									button: "Ok",
-        									});}
-        								</script>';
-            }   
-            
-        
+if(isset($_POST['Send'])){
+    $schedule_time = $_POST['schedule_time'];
+    $date = $_POST['date']." - ".$schedule_time; // Combine date and time
+    $user_id = $_POST['user_id'];
+    $services = implode(',', $_POST['services'] ?? []); // Handle multiple selected services as a comma-separated string
+    
+    // Query to check if the date already exists with approved status
+    $q1 = $conn->query("SELECT COUNT(*) FROM `appointment_desc` WHERE `appointment_date` = '$date'");
+    $f1 = $q1->fetch_array(MYSQLI_NUM);
+    $count = $f1[0]; // Check how many records match this condition
+    
+    $time1 = date('H:i',time());  
+    $time2 = $schedule_time;
+    
+    // If the count is 0, it means the appointment is not yet booked
+    if($count == 0){
+        // Proceed to insert the new appointment
+        $sql_sched1  = "INSERT INTO appointment_desc VALUES(null, '$user_id', '$services', '$date', '', '', 'Pending')";	
+        if (mysqli_query($conn, $sql_sched1)){
+            echo '<script>
+                swal({
+                    title: "Success!",
+                    text: "Your booking request was submitted successfully!",
+                    icon: "success",
+                    type: "success"
+                }).then(function() {
+                    window.location = "home.php";
+                });
+            </script>';
+        } else {
+            echo '<script>
+                swal({
+                    title: "Failed!",
+                    text: "Please try again",
+                    icon: "error",
+                    button: "Ok"
+                });
+            </script>';
+        }
+    } else {
+        // If the date is already booked, show the error message
+        echo '<script>
+            swal({
+                title: "Failed!",
+                text: "Your schedule is already booked. Please choose another date or time.",
+                icon: "error",
+                button: "Ok"
+            });
+        </script>';
     }
+}
 ?>
+
+<!--- Copy this for Appointment Schudule Logic -->
       </div>
     </div>
     </div>
